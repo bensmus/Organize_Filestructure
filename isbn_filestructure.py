@@ -1,6 +1,7 @@
 import PyPDF2
 import os
-import shutil 
+import shutil  
+from tabulate import tabulate  # for pretty printing
 
 # this program goes through a filetree and (a) renames the files according to ISBN-13 Convention, (b) moves them all to one directory
 
@@ -12,11 +13,13 @@ import shutil
 # This file is used for the companion program xml_write_v4.py, which uses that file to make an ONIX file.
 # Lastly the program also creates two .txt files for problematic pdf's (the program creates three .txt files in total)
 
+# also note that you may see 'file' being syntax highlighted specially
+# but that is just due to it being the name of a builtin function in python2 (depreciated)
 def extract_isbn(filepath):
     '''Returns the proper filename for the PDF using ISBN13.'''
     
-    with open(filepath, 'rb') as file:
-        reader = PyPDF2.PdfFileReader(file)
+    with open(filepath, 'rb') as f:
+        reader = PyPDF2.PdfFileReader(f)
 
         string = ''
         for i in range(7):  
@@ -43,16 +46,17 @@ def extract_isbn(filepath):
 failed_isbn = []  # cannot find ISBN inside pdf
 failed_open = []  # failed to open pdf
 successes = 0  # number of successfuly copied files
+failures = 0  # number of failed files
 
 # Check that the directory is found on the system  
 rootdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original'
 if not os.path.exists(rootdir):
-    raise OSError('Directory {} does not exist on your computer'.format(rootdir))
+    raise OSError(f'Directory {rootdir} does not exist on your computer')
 
 # where we will be moving all of the files 
 targetdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_formatted'
 
-# finding the total number of files so that we can include in the progress bar
+# finding the total number of files so that we can include in the progress log
 total = 0
 for folder, subs, files in os.walk(rootdir):
     for f in files:
@@ -83,22 +87,35 @@ with open(text_filename, 'a') as namefile:
                     namefile.write(name + '\n')
                     
                     successes += 1
-                    print(successes, u'\u2713')
+                    
 
                 else:
-                    print(full_name, 'FAILED TO LOCATE ISBN')
+                    failures += 1
                     failed_isbn.append(full_name)
             
             except OSError as e:
-                print(full_name, e)
+                failures += 1
                 failed_open.append(full_name)
 
+            # unicode check and crosses for success and failure
+            # using tabulate to get a nice output
+            table = [[successes, failures, total]]
+            print(tabulate(table, headers=[u'\u2713', u'\u2717', 'total']))
 
-with open('failed_isbn.txt', 'a') as f:
-    for name in failed_isbn:
-        f.write(name + '\n')
+#   ✓    ✗    total
+# 119   15      134
 
-with open('failed_open.txt', 'a') as f:
+with open('failed.txt', 'a') as f:
+
+    f.write('FAILED TO OPEN\n')
     for name in failed_open:
         f.write(name + '\n')
+    f.write('\n')
+    f.write('FAILED TO LOCATE ISBN\n')
+    for name in failed_isbn:
+        f.write(name + '\n')
+    
+
+
+    
 

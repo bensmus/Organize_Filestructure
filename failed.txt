@@ -1,0 +1,18 @@
+FAILED TO OPEN
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\High School Math Solution\Integrated Math II\High School Math Solution Integrated Math 2 Student Edition Volume 1.pdf
+
+FAILED TO LOCATE ISBN
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 06\MW20_G6_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 06\MW20_G6_SE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 07\MW20_G7_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 07\MW20_G7_SE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 08\MW20_G8_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 08\MW20_G8_SE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 09\MW20_G09_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 09\MW20_G09_SE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 10\MW20_G10_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 10\MW20_G10_SE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 11\MW20_G11_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 11\MW20_G11_SE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 12\MW20_G12_ATE_ESelections.pdf
+C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original\Mirrors&Windows\Grade 12\MW20_G12_SE_ESelections.pdf
