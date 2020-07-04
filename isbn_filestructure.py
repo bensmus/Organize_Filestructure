@@ -16,6 +16,22 @@ from datetime import datetime  # for logging
 # This file is used for the companion program xml_write_v4.py, which uses that file to make an ONIX file.
 # Lastly the program also creates two .txt files for problematic books (the program creates three .txt files in total).
 
+def most_numbers(stringlist):
+    '''return the string that has the most numbers'''
+
+    count_string_dict = {}
+
+    for string in stringlist:
+        count = 0
+        for char in string:
+            if char.isdigit():
+                count += 1
+        count_string_dict[count] = string
+
+    max_count = max(list(count_string_dict.keys()))
+    return count_string_dict[max_count]
+
+    
 def find_isbn_in_string(string):
     isbn = ''
     for char in string:
@@ -73,15 +89,20 @@ def return_isbn_name_from_pdf(full_name):
             page = reader.getPage(i)
             string += page.extractText()
 
-    start = string.find('ISBN')  # returns -1 if no ISBN found
-    if start == -1:
-        return 
 
-    string = string[start:]
+    isbn_matches = list(re.finditer('ISBN', string))  # list of match objects
+    if not isbn_matches:  # empty list
+        return 
     
-    isbn = find_isbn_in_string(string)  # fails on a document which has "let's talk about ISBN's because we are cool! Published in 2013 at 6:56 PM"
+    possible_isbn_locations = [m.start() for m in isbn_matches]  # list of integers
+
+    # now choose which one has most numbers around it, determine if ISBN is being used in a sentence or to identify an ISBN
+    possible_isbn_strings = [string[i:i+50] for i in possible_isbn_locations]
+    isbn_string = most_numbers(possible_isbn_strings)
+    
+    isbn = find_isbn_in_string(isbn_string)
     if len(isbn) == 13:
-        return isbn + '.pdf'  
+        return isbn + '.pdf' 
 
 
 def return_isbn_name_from_epub(full_name):
