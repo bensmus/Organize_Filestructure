@@ -3,6 +3,7 @@ import os
 import shutil  
 from tabulate import tabulate  # for pretty printing
 import re
+import xml.etree.ElementTree as ET  # for parsing the content.opf file
 
 # this program goes through a filetree and (a) renames the files according to ISBN-13 Convention, (b) moves them all to one directory
 
@@ -13,6 +14,18 @@ import re
 # The program will ask you for a filename, which will be the filename of a file that contains the old and new filenames (effectively shows you what the prgram did).
 # This file is used for the companion program xml_write_v4.py, which uses that file to make an ONIX file.
 # Lastly the program also creates two .txt files for problematic pdf's (the program creates three .txt files in total)
+
+def find_isbn_in_string(string):
+    isbn = ''
+    for char in string:
+        if len(isbn) == 13:
+            break
+        if char.isdigit():
+            isbn += char
+
+    if len(isbn) == 13:
+        return isbn 
+
 
 def extract_epub_to_directory(full_name, dest_dir):
     '''
@@ -39,14 +52,13 @@ def return_isbn_from_opf(full_name):
     
     for root, _, files in os.walk(full_name):
         for f in files:
-            if f == 'content.opf':
-                with open(os.path.join(root, f), 'r') as content:
-                    for line in content.readlines():
-                        if 'ISBN' in line.upper():
-                            isbn = re.search(r'(\d{13})', line)
-                            if isbn:
-                                return isbn.group(0) # the entire match
-    return -1
+            if f == 'content.opf' or f == 'package.opf':  # aaargh different names of metadata files!!! also package.opf
+                tree = ET.parse(os.path.join(root, f))
+                for elem in tree.iter():
+                    if elem.tag == '{http://purl.org/dc/elements/1.1/}identifier':
+                        isbn = re.search(r'(\d{13})', elem.text)
+                        if isbn:
+                            return isbn.group(0)
 
 
 def return_isbn_name_from_pdf(full_name):
@@ -66,16 +78,9 @@ def return_isbn_name_from_pdf(full_name):
 
     string = string[start:]
     
-    isbn = ''
-    for char in string:
-        if len(isbn) == 13:
-            break
-        if char.isdigit():
-            isbn += char
-
+    isbn = find_isbn_in_string(string)
     if len(isbn) == 13:
-        return isbn + '.pdf'   
-    return -1
+        return isbn + '.pdf'  
 
 
 def return_isbn_name_from_epub(full_name):
@@ -87,9 +92,8 @@ def return_isbn_name_from_epub(full_name):
     isbn = return_isbn_from_opf(temp_dir)
     shutil.rmtree(temp_dir)
 
-    if isbn != -1:
+    if isbn != None:
         return isbn + '.epub'
-    return -1
 
 
 def return_isbn_name(full_name):
@@ -97,12 +101,12 @@ def return_isbn_name(full_name):
 
     if full_name.endswith('epub'):
         isbn_name = return_isbn_name_from_epub(full_name)
+        return isbn_name
     
     if full_name.endswith('pdf'):
         isbn_name = return_isbn_name_from_pdf(full_name)
+        return isbn_name
     
-    return isbn_name
-
 
 failed_isbn = []  # cannot find ISBN inside pdf
 failed_open = []  # failed to open pdf
@@ -138,7 +142,7 @@ with open(text_filename, 'a') as namefile:
             try:
                 new_name = return_isbn_name(full_name)
                 
-                if new_name != -1:
+                if new_name != None:
                     new_full_name = os.path.join(targetdir, new_name)
 
                     # copy the file to the new location
