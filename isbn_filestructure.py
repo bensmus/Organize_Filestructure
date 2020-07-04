@@ -4,6 +4,7 @@ import shutil
 from tabulate import tabulate  # for pretty printing
 import re
 import xml.etree.ElementTree as ET  # for parsing the content.opf file
+from datetime import datetime  # for logging 
 
 # this program goes through a filetree and (a) renames the files according to ISBN-13 Convention, (b) moves them all to one directory
 
@@ -13,7 +14,7 @@ import xml.etree.ElementTree as ET  # for parsing the content.opf file
 # Run this program, which should populate ftpfiles_formatted with files in the correct format.
 # The program will ask you for a filename, which will be the filename of a file that contains the old and new filenames (effectively shows you what the prgram did).
 # This file is used for the companion program xml_write_v4.py, which uses that file to make an ONIX file.
-# Lastly the program also creates two .txt files for problematic pdf's (the program creates three .txt files in total)
+# Lastly the program also creates two .txt files for problematic books (the program creates three .txt files in total).
 
 def find_isbn_in_string(string):
     isbn = ''
@@ -51,9 +52,9 @@ def return_isbn_from_opf(full_name):
     ''' Search a directory for a content.opf file and return the book's ISBN. '''
     
     for root, _, files in os.walk(full_name):
-        for f in files:
-            if f == 'content.opf' or f == 'package.opf':  # aaargh different names of metadata files!!! also package.opf
-                tree = ET.parse(os.path.join(root, f))
+        for f in files:                 
+            if f == 'content.opf' or f == 'package.opf':  # aaargh different names of metadata files!!! also package.opf        
+                tree = ET.parse(os.path.join(root, f))              
                 for elem in tree.iter():
                     if elem.tag == '{http://purl.org/dc/elements/1.1/}identifier':
                         isbn = re.search(r'(\d{13})', elem.text)
@@ -78,7 +79,7 @@ def return_isbn_name_from_pdf(full_name):
 
     string = string[start:]
     
-    isbn = find_isbn_in_string(string)
+    isbn = find_isbn_in_string(string)  # fails on a document which has "let's talk about ISBN's because we are cool! Published in 2013 at 6:56 PM"
     if len(isbn) == 13:
         return isbn + '.pdf'  
 
@@ -114,9 +115,9 @@ successes = 0  # number of successfuly copied files
 failures = 0  # number of failed files
 
 # Check that the directory is found on the system  
-rootdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original_TEST_WITH_EPUBS'
+rootdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original_TEST_WITH_PDFS'
 if not os.path.exists(rootdir):
-    raise OSError(f'Directory {rootdir} does not exist on your computer')
+    raise OSError(f'Directory {rootdir} not found')
 
 # where we will be moving all of the files 
 targetdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_formatted'
@@ -169,19 +170,16 @@ with open(text_filename, 'a') as namefile:
 #   ✓    ✗    total
 # 119   15      134
 
-with open('failed.txt', 'a') as f:
+if failed_open or failed_isbn:
+    with open('failed.txt', 'a') as f:  
+        f.write(f'------{datetime.now()}-----------\n')
+        
+        if failed_open:
+            f.write('FAILED TO OPEN\n')  
+            for name in failed_open:
+                f.write(name + '\n')
 
-    f.write('FAILED TO OPEN\n')
-    for name in failed_open:
-        f.write(name + '\n')
-   
-    f.write('\n')
-    
-    f.write('FAILED TO LOCATE ISBN\n')
-    for name in failed_isbn:
-        f.write(name + '\n')
-    
-
-
-    
-
+        if failed_isbn:
+            f.write('FAILED TO LOCATE ISBN\n')
+            for name in failed_isbn: 
+                f.write(name + '\n')
