@@ -64,18 +64,33 @@ def extract_epub_to_directory(full_name, dest_dir):
         os.rename(full_name.replace('.epub', '.zip'), full_name)
 
 
-def return_isbn_from_opf(full_name):
-    ''' Search a directory for a content.opf file and return the book's ISBN. '''
-    
-    for root, _, files in os.walk(full_name):
-        for f in files:                 
-            if f == 'content.opf' or f == 'package.opf':  # aaargh different names of metadata files!!! also package.opf        
-                tree = ET.parse(os.path.join(root, f))              
-                for elem in tree.iter():
-                    if elem.tag == '{http://purl.org/dc/elements/1.1/}identifier':
-                        isbn = re.search(r'(\d{13})', elem.text)
-                        if isbn:
-                            return isbn.group(0)
+def return_opf_full_name(temp_dir):
+    '''get the full_name of the opf file from the container.xml file inside META-INF'''
+    # note that temp_dir contains full path to it, and is the temporary directory to which epub got extracted
+
+    container_full_name = os.path.join(temp_dir, 'META-INF', 'container.xml')
+    with open(container_full_name) as container:
+        tree = ET.parse(container)
+        for elem in tree.iter():
+            if elem.tag == '{urn:oasis:names:tc:opendocument:xmlns:container}rootfile':
+                opf_full_name = os.path.join(temp_dir, elem.attrib['full-path'])
+                return opf_full_name
+
+
+def return_isbn_from_opf(opf_full_name, isbn_tag):
+    '''
+    isbn_tag can either be isbn_tag='source' or isbn_tag='identifier'
+    Sometimes, the isbn is under the source tag, other times the identifier tag.
+    Also, it does not always match up with the ISBN that is inside the book. 
+    Will leave it up to the publishers where they want to grab ISBN from, source or identifier
+    '''
+   
+    tree = ET.parse(opf_full_name)              
+    for elem in tree.iter():
+        if elem.tag == ('{http://purl.org/dc/elements/1.1/}' + isbn_tag):
+            isbn = re.search(r'(\d{13})', elem.text)
+            if isbn:
+                return isbn.group(0)
 
 
 def return_isbn_name_from_pdf(full_name):
@@ -105,24 +120,25 @@ def return_isbn_name_from_pdf(full_name):
         return isbn + '.pdf' 
 
 
-def return_isbn_name_from_epub(full_name):
+def return_isbn_name_from_epub(full_name, isbn_tag):
     '''Returns the proper filename for the EPUB using ISBN13.'''
     
-    temp_dir = full_name[:-5]
+    temp_dir = full_name[:-5]  # removing the .epub
 
     extract_epub_to_directory(full_name, temp_dir)
-    isbn = return_isbn_from_opf(temp_dir)
+    opf_full_name = return_opf_full_name(temp_dir)
+    isbn = return_isbn_from_opf(opf_full_name, isbn_tag)
     shutil.rmtree(temp_dir)
 
     if isbn != None:
         return isbn + '.epub'
 
 
-def return_isbn_name(full_name):
+def return_isbn_name(full_name, isbn_tag):
     '''Returns the proper filename for the PDF or EPUB using ISBN13.'''
 
     if full_name.endswith('epub'):
-        isbn_name = return_isbn_name_from_epub(full_name)
+        isbn_name = return_isbn_name_from_epub(full_name, isbn_tag)
         return isbn_name
     
     if full_name.endswith('pdf'):
@@ -136,12 +152,12 @@ successes = 0  # number of successfuly copied files
 failures = 0  # number of failed files
 
 # Check that the directory is found on the system  
-rootdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original_TEST_WITH_PDFS'
+rootdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_original_TEST_WITH_EPUBS'
 if not os.path.exists(rootdir):
     raise OSError(f'Directory {rootdir} not found')
 
 # where we will be moving all of the files 
-targetdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_formatted'
+targetdir = r'C:\Users\Ben Smus\Evident_Point\FTP\Carnegie_Clone\ftpfiles_formatted_TEST'
 
 # finding the total number of files so that we can include in the progress log
 total = 0
@@ -150,7 +166,10 @@ for folder, subs, files in os.walk(rootdir):
         total += 1
 
 # used for creating ONIX script in another program
-text_filename = input('Output filename (use extension .txt)? ')
+text_filename = input('Output filename for logging renames (use extension .txt): ')
+isbn_tag = input('''When looking for isbn in epub, do you want to search source tag or identifier tag?
+Enter 'source' or 'identifier': '''
+)
 
 # file for storing old (descriptive) and new (ISBN13) names
 with open(text_filename, 'a') as namefile:
@@ -162,7 +181,7 @@ with open(text_filename, 'a') as namefile:
             full_name = os.path.join(folder, name)  # e.g C:\Users\foo.pdf
 
             try:
-                new_name = return_isbn_name(full_name)
+                new_name = return_isbn_name(full_name, isbn_tag)
                 
                 if new_name != None:
                     new_full_name = os.path.join(targetdir, new_name)
@@ -193,7 +212,7 @@ with open(text_filename, 'a') as namefile:
 
 if failed_open or failed_isbn:
     with open('failed.txt', 'a') as f:  
-        f.write(f'------{datetime.now()}-----------\n')
+        f.write(f'------{datetime.now()}------\n')
         
         if failed_open:
             f.write('FAILED TO OPEN\n')  
